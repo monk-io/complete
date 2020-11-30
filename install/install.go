@@ -50,6 +50,31 @@ type installer interface {
 	Uninstall(cmd, bin string) error
 }
 
+// EnsureInstall complete command given:
+// cmd: is the command name
+func EnsureInstall(cmd string) error {
+	is := installers()
+	if len(is) == 0 {
+		return errors.New("Did not find any shells to install")
+	}
+	bin, err := getBinaryPath()
+	if err != nil {
+		return err
+	}
+
+	for _, i := range is {
+		if i.IsInstalled(cmd, bin) {
+			continue
+		}
+		errI := i.Install(cmd, bin)
+		if errI != nil {
+			err = multierror.Append(err, errI)
+		}
+	}
+
+	return err
+}
+
 // Install complete command given:
 // cmd: is the command name
 func Install(cmd string) error {
