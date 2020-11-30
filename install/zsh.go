@@ -1,6 +1,8 @@
 package install
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // (un)install in zsh
 // basically adds/remove from .zshrc:
@@ -22,7 +24,7 @@ func (z zsh) Install(cmd, bin string) error {
 	}
 
 	completeCmd := z.cmd(cmd, bin)
-	bashCompInit := "autoload -U +X bashcompinit && bashcompinit"
+	bashCompInit := "\nautoload -U +X bashcompinit && bashcompinit"
 	if !lineInFile(z.rc, bashCompInit) {
 		completeCmd = bashCompInit + "\n" + completeCmd
 	}

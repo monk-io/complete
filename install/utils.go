@@ -1,15 +1,30 @@
 package install
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/posener/script"
 )
 
 func lineInFile(path string, line string) bool {
-	return script.Cat(path).Grep(regexp.MustCompile("^"+line+"$")).Wc().Lines > 0
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	// Splits on newlines by default.
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), line) {
+			return true
+		}
+	}
+	return false
 }
 
 func createFile(path string, content string) error {
