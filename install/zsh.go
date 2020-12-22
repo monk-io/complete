@@ -22,14 +22,20 @@ func (z zsh) Install(cmd, bin string) error {
 	if z.IsInstalled(cmd, bin) {
 		return fmt.Errorf("already installed in %s", z.rc)
 	}
-
-	completeCmd := z.cmd(cmd, bin)
-	bashCompInit := "\nautoload -U +X bashcompinit && bashcompinit"
+	var bashCompInit = "autoload -U +X bashcompinit && bashcompinit"
 	if !lineInFile(z.rc, bashCompInit) {
-		completeCmd = bashCompInit + "\n" + completeCmd
+		if err := appendFile(z.rc, "\n"+bashCompInit); err != nil {
+			return err
+		}
+	}
+	completeCmd := z.cmd(cmd, bin)
+	if !lineInFile(z.rc, completeCmd) {
+		if err := appendFile(z.rc, "\n"+completeCmd); err != nil {
+			return err
+		}
 	}
 
-	return appendFile(z.rc, completeCmd)
+	return nil
 }
 
 func (z zsh) Uninstall(cmd, bin string) error {
