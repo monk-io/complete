@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+var ErrNoShellsFound = errors.New("Did not find any shells to uninstall")
+
 func Run(name string, uninstall, yes bool, out io.Writer, in io.Reader) {
 	action := "install"
 	if uninstall {
@@ -120,7 +122,7 @@ func IsInstalled(cmd string) bool {
 func Uninstall(cmd string) error {
 	is := installers()
 	if len(is) == 0 {
-		return errors.New("Did not find any shells to uninstall")
+		return ErrNoShellsFound
 	}
 	bin, err := getBinaryPath()
 	if err != nil {

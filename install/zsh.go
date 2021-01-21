@@ -48,5 +48,5 @@ func (z zsh) Uninstall(cmd, bin string) error {
 }
 
 func (zsh) cmd(cmd, bin string) string {
-	return fmt.Sprintf("complete -o nospace -C %s %s", bin, cmd)
+	return fmt.Sprintf("if [[ -x %s ]]; then complete -o nospace -C %s %s; fi", bin, bin, cmd)
 }
