@@ -16,6 +16,12 @@ import (
 
 var ErrNoShellsFound = errors.New("Did not find any shells to uninstall")
 
+const (
+	Bash = "bash"
+	Zsh  = "zsh"
+	Fish = "fish"
+)
+
 func Run(name string, uninstall, yes bool, out io.Writer, in io.Reader) {
 	action := "install"
 	if uninstall {
@@ -54,8 +60,8 @@ type installer interface {
 
 // EnsureInstall complete command given:
 // cmd: is the command name
-func EnsureInstall(cmd string) error {
-	is := installers()
+func EnsureInstall(cmd string, shells ...string) error {
+	is := installers(shells...)
 	if len(is) == 0 {
 		return errors.New("Did not find any shells to install")
 	}
@@ -139,29 +145,46 @@ func Uninstall(cmd string) error {
 	return err
 }
 
-func installers() (i []installer) {
+func installers(shells ...string) (i []installer) {
 	// The list of bash config files candidates where it is
 	// possible to install the completion command.
+	filterShells := len(shells) > 0
 	var bashConfFiles []string
-	switch runtime.GOOS {
-	case "darwin":
-		bashConfFiles = []string{".bash_profile"}
-	default:
-		bashConfFiles = []string{".bashrc", ".bash_profile", ".bash_login", ".profile"}
-	}
-	for _, rc := range bashConfFiles {
-		if f := rcFile(rc); f != "" {
-			i = append(i, bash{f})
-			break
+	if !filterShells || contains(shells, Bash) {
+		switch runtime.GOOS {
+		case "darwin":
+			bashConfFiles = []string{".bash_profile"}
+		default:
+			bashConfFiles = []string{".bashrc", ".bash_profile", ".bash_login", ".profile"}
+		}
+		for _, rc := range bashConfFiles {
+			if f := rcFile(rc); f != "" {
+				i = append(i, bash{f})
+				break
+			}
 		}
 	}
-	if f := rcFile(".zshrc"); f != "" {
-		i = append(i, zsh{f})
+	if !filterShells || contains(shells, Zsh) {
+		if f := rcFile(".zshrc"); f != "" {
+			i = append(i, zsh{f})
+		}
 	}
-	if d := fishConfigDir(); d != "" {
-		i = append(i, fish{d})
+
+	if !filterShells || contains(shells, Fish) {
+		if d := fishConfigDir(); d != "" {
+			i = append(i, fish{d})
+		}
 	}
 	return
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 func fishConfigDir() string {
