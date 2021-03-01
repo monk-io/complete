@@ -2,9 +2,9 @@ package install
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/posener/script"
@@ -42,12 +42,11 @@ func removeFromFile(path string, line string) error {
 		return fmt.Errorf("creating backup file: %s", err)
 	}
 
-	tmp, err := script.Cat(path).Modify(script.Grep{Re: regexp.MustCompile("^" + line + "$"), Inverse: true}).ToTempFile()
+	tmp, err := script.Cat(path).Modify(NewSimpleSearcher(line)).ToTempFile()
 	if err != nil {
 		return fmt.Errorf("failed remove: %s", err)
 	}
 	defer os.Remove(tmp)
-
 	err = script.Cat(tmp).ToFile(path)
 	if err != nil {
 		restoreErr := script.Cat(backupPath).ToFile(path)
@@ -56,4 +55,28 @@ func removeFromFile(path string, line string) error {
 		}
 	}
 	return nil
+}
+
+// SimpleSearcher is a modifier that filters only line that equal line we are searching for. If Invert was set only line that did
+type SimpleSearcher struct {
+	line []byte
+}
+
+func (g SimpleSearcher) Modify(line []byte) (modifed []byte, err error) {
+	if line == nil {
+		return nil, nil
+	}
+
+	if !bytes.Equal(line, g.line) {
+		return append(line, '\n'), nil
+	}
+	return nil, nil
+}
+
+func (g SimpleSearcher) Name() string {
+	return fmt.Sprintf("Simple searcher. Line: %s", g.line)
+}
+
+func NewSimpleSearcher(line string) script.Modifier {
+	return SimpleSearcher{line: []byte(line)}
 }
