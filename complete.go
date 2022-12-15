@@ -126,6 +126,9 @@ reset:
 
 	case !arg.Completed:
 		// Currently typing a sub command.
+		if arg.Dashes != "" && arg.HasFlag {
+			return c.suggestFlag(arg.Dashes, arg.Text), nil
+		}
 		return c.suggestSubCommands(arg.Text), nil
 
 	case c.SubCmdGet(arg.Text) != nil:
