@@ -29,6 +29,10 @@ func parseArgs() []arg.Arg {
 	return args
 }
 
+func ParseArgs() []arg.Arg {
+	return parseArgs()
+}
+
 func GetFlagValue(name string) string {
 	flags := parseArgs()
 
