@@ -13,6 +13,7 @@ type Command struct {
 	// Args are extra arguments that the command accepts, those who are given without any flag
 	// before. In any chain of sub commands, only one of them should predict positional arguments.
 	Args Predictor
+	Name string
 }
 
 // Complete runs the completion of the described command.
