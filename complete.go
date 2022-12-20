@@ -1,15 +1,16 @@
 package complete
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/posener/complete/v2/install"
-	"github.com/posener/complete/v2/internal/arg"
-	"github.com/posener/complete/v2/internal/tokener"
+	"github.com/monk-io/complete/v2/install"
+	"github.com/monk-io/complete/v2/internal/arg"
+	"github.com/monk-io/complete/v2/internal/tokener"
 )
 
 // Completer is an interface that a command line should implement in order to get bash completion.
@@ -86,10 +87,9 @@ func Complete(name string, cmd Completer) {
 	args := arg.Parse(line[:i])
 
 	// The first word is the current command name.
-	args = args[1:]
-
+	usingArgs := args[1:]
 	// Run the completion algorithm.
-	options, err := completer{Completer: cmd, args: args}.complete()
+	options, err := completer{Completer: cmd, args: usingArgs}.complete()
 	if err != nil {
 		fmt.Fprintln(out, "\n"+err.Error())
 	} else {
@@ -111,39 +111,39 @@ type completer struct {
 // complete flags and positional arguments.
 func (c completer) complete() ([]string, error) {
 reset:
-	arg := arg.Arg{}
+	arga := arg.Arg{}
 	if len(c.args) > 0 {
-		arg = c.args[0]
+		arga = c.args[0]
 	}
 	switch {
 	case len(c.SubCmdList()) == 0:
 		// No sub commands, parse flags and positional arguments.
 		return c.suggestLeafCommandOptions(), nil
 
-	// case !arg.Completed && arg.IsFlag():
+	// case !arga.Completed && arga.IsFlag():
 	// Suggest help flags for command
-	// return []string{helpFlag(arg.Text)}, nil
+	// return []string{helpFlag(arga.Text)}, nil
 
-	case !arg.Completed:
+	case !arga.Completed:
 		// Currently typing a sub command.
-		if arg.Dashes != "" && arg.HasFlag {
-			return c.suggestFlag(arg.Dashes, arg.Text), nil
+		if arga.Dashes != "" && arga.HasFlag {
+			return c.suggestFlag(arga.Dashes, arga.Text), nil
 		}
-		return c.suggestSubCommands(arg.Text), nil
+		return c.suggestSubCommands(arga.Text), nil
 
-	case c.SubCmdGet(arg.Text) != nil:
+	case c.SubCmdGet(arga.Text) != nil:
 		// Sub command completed, look into that sub command completion.
 		// Set the complete command to the requested sub command, and the before text to all the text
 		// after the command name and rerun the complete algorithm with the new sub command.
 		c.stack = append([]Completer{c.Completer}, c.stack...)
-		c.Completer = c.SubCmdGet(arg.Text)
+		c.Completer = c.SubCmdGet(arga.Text)
 		c.args = c.args[1:]
 		goto reset
-
+	//case arga.Completed && arga.Dashes != "":
+	//	goto reset
 	default:
-
 		// Sub command is unknown...
-		return nil, fmt.Errorf("unknown subcommand: %s", arg.Text)
+		return nil, fmt.Errorf("unknown subcommand: %s", arga.Text)
 	}
 }
 

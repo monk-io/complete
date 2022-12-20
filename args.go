@@ -1,7 +1,7 @@
 package complete
 
 import (
-	"github.com/posener/complete/v2/internal/arg"
+	"github.com/monk-io/complete/v2/internal/arg"
 	"strconv"
 )
 

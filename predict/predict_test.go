@@ -3,7 +3,7 @@ package predict
 import (
 	"testing"
 
-	"github.com/posener/complete/v2"
+	"github.com/monk-io/complete/v2"
 	"github.com/stretchr/testify/assert"
 )
 
