@@ -1,7 +1,6 @@
 package complete
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
