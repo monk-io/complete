@@ -79,7 +79,9 @@ func AutoComplete(text string, completionTree *CompTree, queryFunc SearchMethod)
 		}
 
 	} else if strings.HasPrefix(last, "-") { // ends with flag
-
+		if last == "-" {
+			last = "--"
+		}
 		hasTwoDashes := strings.HasPrefix(last, "--")
 		searchTerm := strings.TrimPrefix(last, "-")
 		searchTerm = strings.TrimPrefix(searchTerm, "-")
