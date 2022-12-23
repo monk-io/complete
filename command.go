@@ -4,6 +4,7 @@ package complete
 // not have a good binding to the `Completer` interface, or to use a Go program as complete binary
 // for another executable (see ./gocomplete as an example.)
 type Command struct {
+	Description string
 	// Sub is map of sub commands of the current command. The key refer to the sub command name, and
 	// the value is it's command descriptive struct.
 	Sub map[string]*Command
@@ -13,11 +14,12 @@ type Command struct {
 	// Args are extra arguments that the command accepts, those who are given without any flag
 	// before. In any chain of sub commands, only one of them should predict positional arguments.
 	Args Predictor
+	Name string
 }
 
 // Complete runs the completion of the described command.
 func (c *Command) Complete(name string) {
-	Complete(name, c)
+	//Complete(name, c)
 }
 
 func (c *Command) SubCmdList() []string {

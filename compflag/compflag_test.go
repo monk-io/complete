@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/posener/complete/v2"
-	"github.com/posener/complete/v2/predict"
+	"github.com/monk-io/complete/v2"
+	"github.com/monk-io/complete/v2/predict"
 	"github.com/stretchr/testify/assert"
 )
 

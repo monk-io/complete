@@ -2,26 +2,28 @@ package complete
 
 import (
 	"fmt"
+	"github.com/google/shlex"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/posener/complete/v2/install"
-	"github.com/posener/complete/v2/internal/arg"
-	"github.com/posener/complete/v2/internal/tokener"
+	"github.com/monk-io/complete/v2/install"
+	"github.com/monk-io/complete/v2/internal/arg"
+	"github.com/monk-io/complete/v2/internal/tokener"
 )
 
 // Completer is an interface that a command line should implement in order to get bash completion.
 type Completer interface {
 	// SubCmdList should return the list of all sub commands of the current command.
 	SubCmdList() []string
-	// SubCmdGet should return a sub command of the current command for the given sub command name.
+	// SubCmdGet should return a sub command of the current command for the given sub command Name.
 	SubCmdGet(cmd string) Completer
 	// FlagList should return a list of all the flag names of the current command. The flag names
 	// should not have the dash prefix.
 	FlagList() []string
-	// FlagGet should return completion options for a given flag. It is invoked with the flag name
+	// FlagGet should return completion options for a given flag. It is invoked with the flag Name
 	// without the dash prefix. The flag is not promised to be in the command flags. In that case,
 	// this method should return a nil predictor.
 	FlagGet(flag string) Predictor
@@ -57,8 +59,8 @@ var (
 
 // Complete the command line arguments for the given command in the case that the program
 // was invoked with COMP_LINE and COMP_POINT environment variables. In that case it will also
-// `os.Exit()`. The program name should be provided for installation purposes.
-func Complete(name string, cmd Completer) {
+// `os.Exit()`. The program Name should be provided for installation purposes.
+func Complete(name string, cmdCompletionTree *CompTree) {
 	var (
 		line        = getEnv("COMP_LINE")
 		point       = getEnv("COMP_POINT")
@@ -83,21 +85,36 @@ func Complete(name string, cmd Completer) {
 	}
 
 	// Parse the command line up to the completion point.
-	args := arg.Parse(line[:i])
+	// args := arg.Parse(line[:i])
 
-	// The first word is the current command name.
-	args = args[1:]
+	line = line[:i]
+	split, err := shlex.Split(line)
+	if err != nil {
+		log.Println(err)
+	}
+	last := split[len(split)-1]
 
 	// Run the completion algorithm.
-	options, err := completer{Completer: cmd, args: args}.complete()
+	options, err := AutoComplete(line[:i], cmdCompletionTree, strings.HasPrefix)
 	if err != nil {
 		fmt.Fprintln(out, "\n"+err.Error())
 	} else {
 		for _, option := range options {
-			fmt.Fprintln(out, option)
+			name := option.Name
+			if strings.HasPrefix(last, "-") && !strings.HasSuffix(line, " ") {
+				name = "-" + option.Name
+				if len(name) > 2 {
+					name = "-" + name
+				}
+			}
+			fmt.Fprintln(out, name)
 		}
 	}
 	exit(0)
+}
+
+func CompleteLine(line string, cmdCompletionTree *CompTree, searchMethod SearchMethod) ([]Suggestion, error) {
+	return AutoComplete(line, cmdCompletionTree, searchMethod)
 }
 
 type completer struct {
@@ -145,10 +162,6 @@ reset:
 }
 
 func (c completer) suggestSubCommands(prefix string) []string {
-	if len(prefix) > 0 && prefix[0] == '-' {
-		help, _ := helpFlag(prefix)
-		return []string{help}
-	}
 	subs := c.SubCmdList()
 	return suggest("", prefix, func(prefix string) []string {
 		var options []string
@@ -260,23 +273,10 @@ func (c completer) iterateStack(f func(Completer)) {
 
 func suggest(dashes, prefix string, collect func(prefix string) []string) []string {
 	options := collect(prefix)
-	help, helpMatched := helpFlag(dashes + prefix)
-	// In case that something matched:
-	if len(options) > 0 {
-		if strings.HasPrefix(help, dashes+prefix) {
-			options = append(options, help)
-		}
-		return options
+	if options == nil || len(options) == 0 {
+		return collect("")
 	}
-
-	if helpMatched {
-		return []string{help}
-	}
-
-	// Nothing matched.
-	options = collect("")
-	help, _ = helpFlag(dashes)
-	return append(options, help)
+	return append(options)
 }
 
 func filterByPrefix(prefix string, options ...string) []string {
@@ -326,18 +326,4 @@ func hasPrefix(s, prefix string) (string, bool) {
 	}
 
 	return token.Closed(), true
-}
-
-// helpFlag returns either "-h", "-help" or "--help".
-func helpFlag(prefix string) (string, bool) {
-	if prefix == "" || prefix == "-" || prefix == "-h" {
-		return "-h", true
-	}
-	if strings.HasPrefix("--help", prefix) {
-		return "--help", true
-	}
-	if strings.HasPrefix(prefix, "--") {
-		return "--help", false
-	}
-	return "-help", false
 }

@@ -2,36 +2,36 @@
 //
 // Usage
 //
-// 	import "github.com/posener/complete/v2/compflag"
+//	import "github.com/monk-io/complete/v2/compflag"
 //
-// 	var (
-// 		// Define flags...
-// 		foo = compflag.String("foo", "", "")
-// 	)
+//	var (
+//		// Define flags...
+//		foo = compflag.String("foo", "", "")
+//	)
 //
-// 	func main() {
-// 		compflag.Parse()
-// 		// Main function.
-// 	}
+//	func main() {
+//		compflag.Parse()
+//		// Main function.
+//	}
 //
 // Alternatively, the library can just be used with the standard library flag package:
 //
-// 	import (
-// 		"flag"
-// 		"github.com/posener/complete/v2/compflag"
-// 	)
+//	import (
+//		"flag"
+//		"github.com/monk-io/complete/v2/compflag"
+//	)
 //
-// 	var (
-// 		// Define flags...
-// 		foo = compflag.String("foo", "", "")
-// 		bar = flag.String("bar", "", "")
-// 	)
+//	var (
+//		// Define flags...
+//		foo = compflag.String("foo", "", "")
+//		bar = flag.String("bar", "", "")
+//	)
 //
-// 	func main() {
-// 		complete.CommandLine()
-// 		flag.Parse()
-// 		// Main function.
-// 	}
+//	func main() {
+//		complete.CommandLine()
+//		flag.Parse()
+//		// Main function.
+//	}
 package compflag
 
 import (
@@ -39,8 +39,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/posener/complete/v2"
 )
 
 // FlagSet is bash completion enabled flag.FlagSet.
@@ -64,7 +62,7 @@ func (fs *FlagSet) Parsed() bool                  { return (*flag.FlagSet)(fs).P
 
 // Complete performs bash completion if needed.
 func (fs *FlagSet) Complete() {
-	complete.Complete(fs.Name(), complete.FlagSet((*flag.FlagSet)(CommandLine)))
+	//complete.Complete(fs.Name(), complete.FlagSet((*flag.FlagSet)(CommandLine)))
 }
 
 var CommandLine = (*FlagSet)(flag.CommandLine)

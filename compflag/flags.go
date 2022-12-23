@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/posener/complete/v2/predict"
+	"github.com/monk-io/complete/v2/predict"
 )
 
 // String if a flag function for a flag of type string.

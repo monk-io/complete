@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/posener/complete/v2/internal/arg"
+	"github.com/monk-io/complete/v2/internal/arg"
 )
 
 // Test is a testing helper function for testing bash completion of a given completer.

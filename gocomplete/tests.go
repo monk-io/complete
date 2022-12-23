@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/posener/complete/v2"
+	"github.com/monk-io/complete/v2"
 )
 
 var (
